@@ -1,0 +1,109 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import kagglehub
+
+# Download dataset from Kaggle
+path = kagglehub.dataset_download("johnsmith88/heart-disease-dataset")
+
+# Load dataset
+csv_file = path + "/heart.csv"
+df = pd.read_csv(csv_file)
+
+# Display first 5 rows
+print(df.head())
+
+# Check dataset information
+df.info()
+
+# Check for missing values
+print(df.isnull().sum())
+
+# Statistical summary
+print(df.describe())
+
+# Correlation heatmap
+plt.figure(figsize=(10, 10))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.show()
+
+# Splitting data into features and target variable
+X = df.drop(columns=['target'])  # 'target' is the column indicating heart disease presence
+Y = df['target']
+
+# Splitting into training and testing sets
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=2)
+
+# Standardizing the features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Load logistic regression model
+model = LogisticRegression()
+
+# Train the model
+model.fit(X_train, Y_train)
+
+# Prediction on training data
+train_predictions = model.predict(X_train)
+train_accuracy = accuracy_score(Y_train, train_predictions)
+print("Training Accuracy:", train_accuracy)
+
+# Prediction on test data
+test_predictions = model.predict(X_test)
+test_accuracy = accuracy_score(Y_test, test_predictions)
+print("Test Accuracy:", test_accuracy)
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(Y_test, test_predictions)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
+
+# Classification Report
+print("Classification Report:")
+print(classification_report(Y_test, test_predictions))
+
+# Function to predict heart disease based on user input
+def predict_heart_disease():
+    print("Enter the following health parameters (provide values within the specified range):")
+    user_input = []
+    input_ranges = {
+        "age": "(29-77)",
+        "sex": "(0: Female, 1: Male)",
+        "cp": "(0-3, Chest pain type)",
+        "trestbps": "(94-200, Resting blood pressure in mm Hg)",
+        "chol": "(126-564, Serum cholesterol in mg/dl)",
+        "fbs": "(0: <120 mg/dl, 1: >120 mg/dl, Fasting blood sugar)",
+        "restecg": "(0-2, Resting ECG results)",
+        "thalach": "(71-202, Maximum heart rate achieved)",
+        "exang": "(0: No, 1: Yes, Exercise-induced angina)",
+        "oldpeak": "(0.0-6.2, ST depression induced by exercise)",
+        "slope": "(0-2, Slope of peak exercise ST segment)",
+        "ca": "(0-4, Number of major vessels colored by fluoroscopy)",
+        "thal": "(0-3, Thalassemia type)"
+    }
+    for col in X.columns:
+        value = float(input(f"{col} {input_ranges.get(col, '')}: "))
+        user_input.append(value)
+
+    user_array = np.array(user_input).reshape(1, -1)
+    user_df = pd.DataFrame(user_array, columns=X.columns)  # Convert to DataFrame with feature names
+    user_scaled = scaler.transform(user_df)  # Transform using StandardScaler
+    prediction = model.predict(user_scaled)
+
+    if prediction[0] == 1:
+        print("The model predicts that the patient has heart disease.")
+    else:
+        print("The model predicts that the patient does NOT have heart disease.")
+
+# Run prediction function
+predict_heart_disease()

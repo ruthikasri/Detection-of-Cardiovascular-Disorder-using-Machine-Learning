@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Heart Health Checker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: white;
+      padding: 25px 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+      color: #34495e;
+    }
+    input[type="text"],
+    input[type="date"],
+    input[type="email"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 5px;
+      border: 1.5px solid #bdc3c7;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    .captcha-container {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .captcha-box {
+      background-color: #e0e0e0;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: 4px;
+      padding: 10px 20px;
+      user-select: none;
+      border-radius: 5px;
+      font-family: monospace;
+      color: #2c3e50;
+    }
+    .refresh-captcha {
+      cursor: pointer;
+      font-size: 1.3rem;
+      background: none;
+      border: none;
+      color: #2980b9;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+    .refresh-captcha:hover {
+      color: #3498db;
+    }
+    button[type="submit"] {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      background-color: #2980b9;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button[type="submit"]:hover {
+      background-color: #3498db;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>Login to Take Test</h2>
+    <form id="loginForm" onsubmit="return validateCaptcha()">
+
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" required placeholder="Your full name" />
+
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" name="dob" required />
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" required placeholder="10-digit number" />
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" required placeholder="example@mail.com" />
+
+      <div class="captcha-container">
+        <div id="captcha" class="captcha-box"></div>
+        <button type="button" class="refresh-captcha" title="Refresh Captcha" onclick="generateCaptcha()">&#x21bb;</button>
+      </div>
+
+      <label for="captchaInput">Enter Captcha</label>
+      <input type="text" id="captchaInput" name="captchaInput" required placeholder="Enter the captcha above" autocomplete="off" />
+
+      <button type="submit">Proceed to Assessment</button>
+    </form>
+  </div>
+
+  <script>
+    const captchaElement = document.getElementById('captcha');
+    const captchaInput = document.getElementById('captchaInput');
+    const dobInput = document.getElementById('dob');
+    let currentCaptcha = '';
+
+    // Set max date for DOB input to today
+    dobInput.max = new Date().toISOString().split('T')[0];
+
+    // Generate random 5-character captcha
+    function generateCaptcha() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let captcha = '';
+      for(let i = 0; i < 5; i++) {
+        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      currentCaptcha = captcha;
+      captchaElement.textContent = captcha;
+    }
+
+    // Validate captcha on form submit
+    function validateCaptcha() {
+      const userCaptcha = captchaInput.value.trim().toUpperCase();
+      if(userCaptcha === currentCaptcha) {
+        // Save user details in localStorage (optional, to pass to next page)
+        const name = document.getElementById('name').value.trim();
+        const dob = dobInput.value;
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+
+        localStorage.setItem('user_name', name);
+        localStorage.setItem('user_dob', dob);
+        localStorage.setItem('user_phone', phone);
+        localStorage.setItem('user_email', email);
+
+        alert('Captcha verified! Redirecting to assessment page...');
+        window.location.href = 'assessment.html'; // Redirect to assessment page
+        return false; // Prevent form from submitting and reloading page
+      } else {
+        alert('Captcha incorrect. Please try again.');
+        generateCaptcha();
+        captchaInput.value = '';
+        return false; // Prevent form submission
+      }
+    }
+
+    // Generate captcha on page load
+    generateCaptcha();
+  </script>
+
+  <form onsubmit="handleLogin(event)">
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+    </form>
+
+</body>
+</html>
